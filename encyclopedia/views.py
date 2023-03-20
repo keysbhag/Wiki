@@ -1,10 +1,14 @@
 from django.shortcuts import render
-
+from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
-
 from markdown2 import Markdown
+from django import forms
 
 from . import util
+
+class NewPageForm(forms.Form):
+    title = forms.CharField(label="Title")
+    content = forms.CharField(label="Content")
 
 
 def index(request):
@@ -36,5 +40,22 @@ def search(request):
         
     return render(request,"encyclopedia/search.html", {
         "searches": util.search_entries(query)
+    })
+
+def newpage(request):
+    if request.method == "POST":
+        form = NewPageForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            content = form.cleaned_data["content"]
+            util.save_entry(title,content)
+            return HttpResponseRedirect("/")
+        else:
+            return render(request, "encyclopedia/newPage.html", {
+                "form": form
+            })
+        
+    return render(request, "encyclopedia/newPage.html", {
+        "form": NewPageForm()
     })
   
